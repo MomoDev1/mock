@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+
+  traefik:
+    image: traefik:1.6-alpine
+    network_mode: web
+    command: --docker --logLevel=ERROR
+    labels:
+      - traefik.enable=false
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  web:
+    build: .
+    network_mode: web
+    labels:
+      - traefik.backend=web
+      - traefik.frontend.rule=Host:mock.localhost
+    volumes:
+      - ./src:/var/www/html:rw
+    environment:
+      - ALLOW_OVERRIDE=true
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.7
+    network_mode: web
+    labels:
+      - traefik.backend=phpmyadmin
+      - traefik.frontend.rule=Host:mockadmin.localhost
+    environment:
+      - PMA_HOST=tidb
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+      - PMA_PORT=4000
